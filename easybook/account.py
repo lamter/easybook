@@ -1,12 +1,14 @@
 # coding=utf8
-import pandas as pd
-import easytrader
 
+import pandas as pd
+import sqlalchemy
 
 class Account:
     """
     账户类,在账本上注册账户
     """
+
+    STOCKS_COLUMNS = ["stock_code", "stock_name", "current_amount", "enable_amount"]
 
     def __init__(self, book):
         self.book = book
@@ -14,6 +16,10 @@ class Account:
         self.path = ""
         # 可以使用的交易账户,有优先级
         self._traders = []
+
+        # 账户数据
+        self.enable_balance = 0  # 可用资金
+        self.stocks = pd.DataFrame(columns=self.STOCKS_COLUMNS)  # 股票持仓
 
     @property
     def log(self):
@@ -39,6 +45,8 @@ class Account:
 
         account = cls()
 
+        dic.pop("stocks")
+
         for k, v in dic.items():
             if not hasattr(account, k):
                 raise ValueError("数据 %s 尚未定义" % k)
@@ -48,21 +56,3 @@ class Account:
 
     def to_save(self):
         return {k: v for k, v in self.__dict__.items() if k != 'book'}
-
-    def enable_balance(self):
-        """
-        获得可用资金:人民币
-        :return:
-        """
-        balance = 0
-        for t in self.traders:
-            if isinstance(t, easytrader.YHTrader):
-                # easytrader 的银河接口
-                balance = pd.DataFrame(t.balance).可用资金[0]
-            else:
-                err = "交易接口 %s"
-                self.log.warn()
-
-        return balance
-
-
